@@ -19,12 +19,19 @@ IP_ADDR=$1
 HOST_UP=false
 PORT_OPEN=false
 FTP_PORT=21
+ANONYMOUS_LOGIN_ENABLED=false
+
+# PRINT A LINE AFTER EACH CHECK
+function print_line(){
+	for i in {1..40}; do echo -n "-"; done
+	echo
+}
 
 # CHECK IF THE HOST IS UP 
 function check_host(){
 echo -e "Checking if the host is up ..."
-nmap $IP_ADDR -p $FTP_PORT &> check_host.txt
-if grep -q "Host is up" check_host.txt; 
+nmap $IP_ADDR -p $FTP_PORT &> /tmp/check_host.txt
+if grep -q "Host is up" /tmp/check_host.txt; 
 then
 HOST_UP=true
 fi
@@ -33,25 +40,30 @@ fi
 # CHECK IF THE FTP PORT $FTP_PORT IS OPEN 
 function  knock_port(){
 echo -e "Knocking the FTP port ..."
-if grep -q "$FTP_PORT/tcp open  ftp" check_host.txt
+if grep -q "$FTP_PORT/tcp open  ftp" /tmp/check_host.txt
 then
 PORT_OPEN=true
 fi 
 }
 
-function print_line(){
-	for i in {1..40}; do echo -n "-"; done
-	echo
-}
-
-# BANNER ENUMERATION
+# RETREIVING THE BANNER 
 function get_banner(){
 echo -e "Grabbing FTP Banner ..."
-nmap --script=banner $IP_ADDR -p $FTP_PORT > banner.txt
-BANNER=$(grep "banner" banner.txt)
+nmap --script=banner $IP_ADDR -p $FTP_PORT > /tmp/banner.txt
+BANNER=$(grep "banner" /tmp/banner.txt)
 REMOVE_STRING="|_banner: "
 echo ${BANNER//$REMOVE_STRING}
 }
+
+function check_anonymous(){
+nmap $IP_ADDR -p $FTP_PORT -A &> /tmp/check_anonymous.txt
+echo "Checking if the server allows Anonymous Login ..."
+if grep -q "Anonymous FTP login allowed" /tmp/check_anonymous.txt
+then
+ANONYMOUS_LOGIN_ENABLED=true
+fi
+}
+
 
 # DRIVER CODE
 echo -e "${BOLDWHITE}[ FTP ENUMERATION TOOL ]${RESET}"
@@ -78,4 +90,15 @@ print_line
 
 get_banner
 print_line
+
+check_anonymous
+if $ANONYMOUS_LOGIN_ENABLED
+then
+echo -e "${BOLDRED}Anonymous Login is Enabled!${RESET}"
+else
+echo -e "Anonymous Login is not Enabled on this Server"
+fi
+print_line
+
+
 
