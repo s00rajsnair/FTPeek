@@ -18,29 +18,25 @@ RESET="\e[0m"
 IP_ADDR=$1
 HOST_UP=false
 PORT_OPEN=false
+FTP_PORT=21
 
-# CHECK IF THE HOST IS UP OR NOT
+# CHECK IF THE HOST IS UP 
 function check_host(){
 echo -e "Checking if the host is up ..."
-nmap -sn $IP_ADDR  &> check_host.txt
-HOST_MESSAGE=$(awk '{if(NR==3) print $0}' check_host.txt)
-if [[ $HOST_MESSAGE =~ ^(Host is up.*)$ ]];
+nmap $IP_ADDR -p $FTP_PORT &> check_host.txt
+if grep -q "Host is up" check_host.txt; 
 then
 HOST_UP=true
 fi
 }
 
-# CHECK IF THE FTP PORT 21 IS OPEN OR NOT
+# CHECK IF THE FTP PORT $FTP_PORT IS OPEN 
 function  knock_port(){
-echo -e "Knocking the FTP port on $IP_ADDR ..."
-bash -c "ftp -nv $IP_ADDR <<END
-bye
-END" &> knock_port.txt
-PORT_MESSAGE=$(awk '{if(NR==1) print $0}' knock_port.txt)
-if [[ $PORT_MESSAGE =~ "Connected to $IP_ADDR." ]]
+echo -e "Knocking the FTP port ..."
+if grep -q "$FTP_PORT/tcp open  ftp" check_host.txt
 then
 PORT_OPEN=true
-fi
+fi 
 }
 
 function print_line(){
@@ -51,6 +47,10 @@ function print_line(){
 # BANNER ENUMERATION
 function get_banner(){
 echo -e "Grabbing FTP Banner ..."
+nmap --script=banner $IP_ADDR -p $FTP_PORT > banner.txt
+BANNER=$(grep "banner" banner.txt)
+REMOVE_STRING="|_banner: "
+echo ${BANNER//$REMOVE_STRING}
 }
 
 # DRIVER CODE
@@ -66,12 +66,16 @@ echo "$IP_ADDR is DOWN"
 fi
 print_line
 
+
 knock_port
-if $PORT_OPEN
+if $PORT_OPEN 
 then
-echo "The FTP port 21 is OPEN on $IP_ADDR"
+echo "The FTP port $FTP_PORT is OPEN on $IP_ADDR"
 else
-echo "The FTP port 21 is CLOSED on $IP_ADDR"
+echo "The FTP port $FTP_PORT is CLOSED on $IP_ADDR"
 fi
+print_line
+
+get_banner
 print_line
 
