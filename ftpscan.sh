@@ -3,6 +3,8 @@
 # FTP ENUMERATION TOOL FOR FINDING 
 # COMMON MISCONFIGURATIONS AND VULNERABILITIES
 
+# MAKE SURE THE LATEST VERSION OF NMAP IS INSTALLED
+
 # COLORS FOR BETTER VIEWING EXPERIENCE OF THE REPORT
 RED="\e[31m"
 YELLOW="\e[33m"
@@ -20,10 +22,11 @@ HOST_UP=false
 PORT_OPEN=false
 FTP_PORT=21
 ANONYMOUS_LOGIN_ENABLED=false
+ANONYMOUS_LOGIN_SUCCESSFUL=false
 
 # PRINT A LINE AFTER EACH CHECK
 function print_line(){
-	for i in {1..40}; do echo -n "-"; done
+	for i in {1..25}; do echo -n "-"; done
 	echo
 }
 
@@ -55,6 +58,7 @@ REMOVE_STRING="|_banner: "
 echo ${BANNER//$REMOVE_STRING}
 }
 
+# CHECK IF ANONYMOUS LOGIN IS ENABLED
 function check_anonymous(){
 nmap $IP_ADDR -p $FTP_PORT -A &> /tmp/check_anonymous.txt
 echo "Checking if the server allows Anonymous Login ..."
@@ -64,10 +68,24 @@ ANONYMOUS_LOGIN_ENABLED=true
 fi
 }
 
+# TRYING TO LOGIN AS ANONYMOUS USER
+function login_anonymous(){
+echo "Attempting Anonymous Login ..."
+bash -c "ftp -nv $IP_ADDR <<END
+user anonymous anonymous
+ls
+bye
+END" &> /tmp/login_anonymous.txt
+if grep -q "Login successful" /tmp/login_anonymous.txt
+then
+ANONYMOUS_LOGIN_SUCCESSFUL=true
+fi
+}
 
-# DRIVER CODE
-echo -e "${BOLDWHITE}[ FTP ENUMERATION TOOL ]${RESET}"
-echo -e "========================================"
+  
+################### DRIVER CODE ###################
+echo -e "${BOLDWHITE}[FTP ENUMERATION TOOL]${RESET}"
+print_line
 
 check_host
 if $HOST_UP
@@ -76,7 +94,7 @@ echo "$IP_ADDR is UP"
 else
 echo "$IP_ADDR is DOWN"
 fi
-print_line
+echo
 
 
 knock_port
@@ -86,19 +104,31 @@ echo "The FTP port $FTP_PORT is OPEN on $IP_ADDR"
 else
 echo "The FTP port $FTP_PORT is CLOSED on $IP_ADDR"
 fi
-print_line
+echo
 
 get_banner
-print_line
+echo ""
 
 check_anonymous
 if $ANONYMOUS_LOGIN_ENABLED
 then
-echo -e "${BOLDRED}Anonymous Login is Enabled!${RESET}"
+echo -e "Anonymous Login is Enabled!"
 else
 echo -e "Anonymous Login is not Enabled on this Server"
+echo -e "Try bruteforcing common credentials"
 fi
-print_line
+echo
+
+login_anonymous
+if $ANONYMOUS_LOGIN_SUCCESSFUL
+then
+echo -e "Anonymous Login Successful!"
+else
+echo -e "Anonymous Login Failed"
+fi
+echo
+
+
 
 
 
