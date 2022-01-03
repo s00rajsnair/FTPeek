@@ -3,7 +3,7 @@
 # FTP ENUMERATION TOOL FOR FINDING 
 # COMMON MISCONFIGURATIONS AND VULNERABILITIES
 
-# MAKE SURE THE LATEST VERSION OF NMAP IS INSTALLED
+# MAKE SURE THE LATEST VERSION OF NMAP AND WGET IS INSTALLED
 
 # COLORS FOR BETTER VIEWING EXPERIENCE OF THE REPORT
 RED="\e[31m"
@@ -61,7 +61,7 @@ echo ${BANNER//$REMOVE_STRING}
 # CHECK IF ANONYMOUS LOGIN IS ENABLED
 function check_anonymous(){
 nmap $IP_ADDR -p $FTP_PORT -A &> /tmp/check_anonymous.txt
-echo "Checking if the server allows Anonymous Login ..."
+echo "Checking for Anonymous Login ..."
 if grep -q "Anonymous FTP login allowed" /tmp/check_anonymous.txt
 then
 ANONYMOUS_LOGIN_ENABLED=true
@@ -70,22 +70,81 @@ fi
 
 # TRYING TO LOGIN AS ANONYMOUS USER
 function login_anonymous(){
+
 echo "Attempting Anonymous Login ..."
 bash -c "ftp -nv $IP_ADDR <<END
 user anonymous anonymous
-ls
 bye
 END" &> /tmp/login_anonymous.txt
 if grep -q "Login successful" /tmp/login_anonymous.txt
 then
 ANONYMOUS_LOGIN_SUCCESSFUL=true
 fi
+
+rm /tmp/login_anonymous.txt
 }
 
-  
+# LISING ALL THE FILES AND  DIRECTORIES
+function list_files_directories(){
+
+echo "Getting all the files and directories, including the hidden ones ..."
+
+wget -r ftp://$IP_ADDR &> /tmp/list_files_directories.txt 
+tree $IP_ADDR
+find $IP_ADDR -type f -name '.*' > /tmp/hidden_files.txt
+find $IP_ADDR -type d -name '.*' > /tmp/hidden_directories.txt
+
+HIDDEN_FILE_COUNT=$(cat /tmp/hidden_files.txt | wc -l)
+HIDDEN_DIRECTORY_COUNT=$(cat /tmp/hidden_directories.txt | wc -l)
+
+echo "Hidden Files : $HIDDEN_FILE_COUNT"
+echo "Hidden Directories : $HIDDEN_DIRECTORY_COUNT"
+echo 
+
+if [ $HIDDEN_FILE_COUNT -gt 0 ]
+then
+echo "Hidden Files"
+echo "------------"
+cat /tmp/hidden_files.txt
+fi
+
+if [ $HIDDEN_DIRECTORY_COUNT -gt 0 ]
+then
+echo "Hidden Directories"
+echo "------------------"
+cat /tmp/hidden_directories.txt
+fi
+
+rm -rf $IP_ADDR
+rm /tmp/hidden_files.txt /tmp/hidden_directories.txt /tmp/list_files_directories.txt
+
+}
+
+# CHECK IF A FILE CAN BE UPLOADED TO THE HOST 
+function check_upload_permissions(){
+
+echo "Checking if anonymous upload is enabled ..."
+touch /tmp/check_upload.txt
+bash -c "ftp -nv $IP_ADDR <<END
+user anonymous anonymous
+put /tmp/check_upload.txt check_upload.txt
+END" &> /tmp/check_upload_permissions.txt
+
+# cat /tmp/check_upload_permissions.txt
+if grep -q "Transfer complete" /tmp/check_upload_permissions.txt
+then
+UPLOAD_ENABLED=true
+else
+UPLOAD_ENABLED=false
+fi
+rm /tmp/check_upload_permissions.txt /tmp/check_upload.txt
+
+}
+
+
 ################### DRIVER CODE ###################
-echo -e "${BOLDWHITE}[FTP ENUMERATION TOOL]${RESET}"
-print_line
+echo -e "[FTP ENUMERATION TOOL]"
+echo
 
 check_host
 if $HOST_UP
@@ -112,10 +171,9 @@ echo ""
 check_anonymous
 if $ANONYMOUS_LOGIN_ENABLED
 then
-echo -e "Anonymous Login is Enabled!"
+echo -e "Anonymous login is enabled!"
 else
-echo -e "Anonymous Login is not Enabled on this Server"
-echo -e "Try bruteforcing common credentials"
+echo -e "Anonymous login is not enabled on this host"
 fi
 echo
 
@@ -128,6 +186,17 @@ echo -e "Anonymous Login Failed"
 fi
 echo
 
+list_files_directories
+echo
+
+check_upload_permissions
+if $UPLOAD_ENABLED
+then
+echo -e "File upload Successful!"
+else
+echo -e "File upload Failed"
+fi
+echo
 
 
 
