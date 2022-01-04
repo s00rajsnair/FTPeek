@@ -24,6 +24,7 @@ PORT_OPEN=false
 FTP_PORT=21
 ANONYMOUS_LOGIN_ENABLED=false
 ANONYMOUS_LOGIN_SUCCESSFUL=false
+UPLOAD_SUCCESSFUL=false
 
 # PRINT A LINE AFTER EACH CHECK
 function print_line(){
@@ -90,7 +91,7 @@ rm /tmp/login_anonymous.txt
 
 # LISING ALL THE FILES AND  DIRECTORIES
 function list_files_directories(){
-echo "Getting all the files and directories, including the hidden ones ..."
+echo "Listing the contents of the server ..."
 wget -r ftp://$IP_ADDR &> /tmp/list_files_directories.txt 
 echo
 tree $IP_ADDR -a
@@ -103,15 +104,18 @@ echo "Hidden Files : $HIDDEN_FILE_COUNT"
 echo "Hidden Directories : $HIDDEN_DIRECTORY_COUNT"  
 if [ $HIDDEN_FILE_COUNT -gt 0 ]
 then
+echo
 echo "Hidden Files"
 echo "------------"
 cat /tmp/hidden_files.txt
+echo
 fi
 if [ $HIDDEN_DIRECTORY_COUNT -gt 0 ]
 then
 echo "Hidden Directories"
 echo "------------------"
 cat /tmp/hidden_directories.txt
+echo
 fi
 rm -rf $IP_ADDR
 rm /tmp/hidden_files.txt /tmp/hidden_directories.txt /tmp/list_files_directories.txt
@@ -127,64 +131,61 @@ put /tmp/check_upload.txt check_upload.txt
 END" &> /tmp/check_upload_permissions.txt
 if grep -q "Transfer complete" /tmp/check_upload_permissions.txt
 then
-UPLOAD_ENABLED=true
+UPLOAD_SUCCESSFUL=true
 else
-UPLOAD_ENABLED=false
+UPLOAD_SUCCESSFUL=false
 fi
 rm /tmp/check_upload_permissions.txt /tmp/check_upload.txt
 }
 
 ################### DRIVER CODE ###################
-echo -e "[FTPeek]"
-echo
+echo "[FTPeek]"
 
-check_host
-if $HOST_UP
+if [ -z $IP_ADDR ]
 then
-echo "$IP_ADDR is UP"
+	echo "Please enter a target IP address or Subnet Address "
+	echo "Usage : ./FTPeek.sh <IP or Subnet>"
+	echo "Examples : "
+	echo "     ./FTPeek.sh 192.168.1.2"
+	echo "     ./FTPeek.sh 192.168.1.0/24"
+	echo "     ./FTPeek.sh localhost"
+	exit
 else
-echo "$IP_ADDR is DOWN"
+	check_host
+	if $HOST_UP
+	then
+		echo "$IP_ADDR is UP"
+		knock_port
+		if $PORT_OPEN 
+		then
+			echo "The FTP port $FTP_PORT is OPEN on $IP_ADDR"
+			get_banner
+			check_anonymous
+			if $ANONYMOUS_LOGIN_ENABLED
+			then
+				echo "Anonymous login is enabled!"
+				login_anonymous
+				if $ANONYMOUS_LOGIN_SUCCESSFUL
+				then
+					echo -e "Anonymous Login Successful!"
+					list_files_directories
+					check_upload_permissions
+					if $UPLOAD_SUCCESSFUL
+					then
+						echo "Anonymous Upload is Enabled!"
+					else
+						echo "Anonymous Upload is Disabled"
+					fi
+				else
+					echo "Anonymous Login Failed"
+				fi
+			else
+				echo "Anonymous login is not enabled on this host"
+			fi
+		else
+			echo "The FTP port $FTP_PORT is CLOSED on $IP_ADDR"
+		fi
+	else
+		echo "$IP_ADDR is DOWN"
+	fi
 fi
-echo
-
-knock_port
-if $PORT_OPEN 
-then
-echo "The FTP port $FTP_PORT is OPEN on $IP_ADDR"
-else
-echo "The FTP port $FTP_PORT is CLOSED on $IP_ADDR"
-fi
-echo
-
-get_banner
-echo ""
-
-check_anonymous
-if $ANONYMOUS_LOGIN_ENABLED
-then
-echo -e "Anonymous login is enabled!"
-else
-echo -e "Anonymous login is not enabled on this host"
-fi
-echo
-
-login_anonymous
-if $ANONYMOUS_LOGIN_SUCCESSFUL
-then
-echo -e "Anonymous Login Successful!"
-else
-echo -e "Anonymous Login Failed"
-fi
-echo
-
-list_files_directories
-echo
-
-check_upload_permissions
-if $UPLOAD_ENABLED
-then
-echo -e "File upload Successful!"
-else
-echo -e "File upload Failed"
-fi
-echo
