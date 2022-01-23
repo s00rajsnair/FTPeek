@@ -6,18 +6,38 @@
 
 # MAKE SURE THE LATEST VERSION OF NMAP, WGET IS INSTALLED
 
+# COLORS
+RED="\e[31m"
+YELLOW="\e[33m"
+GREEN="\e[32m"
+WHITE="\e[97m"
+BOLDRED="\e[1;31m"
+BOLDYELLOW="\e[1;33m"
+BOLDGREEN="\e[1;32m"
+BOLDWHITE="\e[1;97m"
+RESET="\e[0m"
+
 # VARIABLES
 IP_ADDR=$1
 HOST_UP=false
 PORT_OPEN=false
-FTP_PORT=21
+
+if [ -z $2 ] 
+then
+	FTP_PORT=21
+else
+	FTP_PORT=$2
+fi
+
 ANONYMOUS_LOGIN_ENABLED=false
 ANONYMOUS_LOGIN_SUCCESSFUL=false
 UPLOAD_SUCCESSFUL=false
+green_button=$(echo -e "${BOLDGREEN}[+]${RESET}")
+red_button=$(echo -e "${BOLDRED}[-]${RESET}")
 
 # PRINT A LINE AFTER EACH CHECK
 function print_line(){
-	for i in {1..25}; do echo -n "-"; done
+	for i in {1..50}; do echo -n "-"; done
 	echo
 }
 
@@ -138,52 +158,55 @@ echo '
 	888            888     888       Y8b.     Y8b.     888  88b 
 	888            888     888        "Y8888   "Y8888  888   888
 '
-
-if [ -z $IP_ADDR ]
+print_line
+if [ -z $IP_ADDR  ] || [ $IP_ADDR == "-h" ] || [ $IP_ADDR == "--help" ] || [ $IP_ADDR == "-help" ]
 then
 	echo "Please enter a target IP address or Subnet Address "
-	echo "Usage : ./FTPeek.sh <IP or Subnet>"
-	echo "Examples : "
+	echo "Usage:  ./FTPeek.sh <IP or Subnet> [Desired Port (21 by default)]"
+	echo "Examples:  "
 	echo "     ./FTPeek.sh 192.168.1.2"
 	echo "     ./FTPeek.sh 192.168.1.0/24"
 	echo "     ./FTPeek.sh localhost"
 	exit
 else
+	echo "Target: $IP_ADDR"
 	check_host
 	if $HOST_UP
 	then
-		echo "$IP_ADDR is UP"
+		echo -e "$green_button $IP_ADDR is UP"
 		knock_port
 		if $PORT_OPEN 
 		then
-			echo "The FTP port $FTP_PORT is OPEN on $IP_ADDR"
+			echo -e "$green_button The FTP port $FTP_PORT is OPEN on $IP_ADDR"
 			get_banner
 			check_anonymous
 			if $ANONYMOUS_LOGIN_ENABLED
 			then
-				echo "Anonymous login is enabled!"
+				echo -e "$green_button Anonymous login is enabled!"
 				login_anonymous
 				if $ANONYMOUS_LOGIN_SUCCESSFUL
 				then
-					echo -e "Anonymous Login Successful!"
+					echo -e "$green_button Anonymous Login Successful!"
 					list_files_directories
 					check_upload_permissions
 					if $UPLOAD_SUCCESSFUL
 					then
-						echo "Anonymous Upload is Enabled!"
+						echo -e "$green_button Anonymous Upload is Enabled!"
 					else
-						echo "Anonymous Upload is Disabled"
+						echo -e "$red_button Anonymous Upload is Disabled"
 					fi
 				else
-					echo "Anonymous Login Failed"
+					echo -e "$red_button Anonymous Login Failed"
 				fi
 			else
-				echo "Anonymous login is not enabled on this host"
+				echo -e "$red_button Anonymous login is not enabled on this host"
 			fi
 		else
-			echo "The FTP port $FTP_PORT is CLOSED on $IP_ADDR"
+			echo -e "$red_button The FTP port $FTP_PORT is CLOSED on $IP_ADDR"
 		fi
 	else
-		echo "$IP_ADDR is DOWN"
+		echo -e "$red_button $IP_ADDR is DOWN"
 	fi
 fi
+print_line
+echo "Exiting ..."
