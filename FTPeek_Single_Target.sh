@@ -205,7 +205,7 @@ function check_upload_permissions(){
 		fi
 	done < /tmp/directories_cut_FTPeek.txt
 
-	rm /tmp/check_upload_permissions_FTPeek.txt /tmp/check_upload_FTPeek.txt
+	rm /tmp/check_upload_permissions_FTPeek.txt /tmp/check_upload_FTPeek.txt /tmp/directories_cut_FTPeek.txt /tmp/directories_FTPeek.txt
 }
 
 ################### DRIVER CODE ###################
