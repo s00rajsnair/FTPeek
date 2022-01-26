@@ -1,4 +1,4 @@
-# ftpscan
+# FTPeek
 A tool for enumerating common vulnerabilities and misconfigurations on FTP service.
 1. Knocking the FTP Port
 2. Grabbing the FTP Banner
