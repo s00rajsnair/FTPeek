@@ -51,11 +51,11 @@ then
 elif [[ $TARGET =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.0$ ]]
 then
     NETWORK_ADDRESS=${TARGET%.*}
-    for i in {1..254} ;do (ping -c 1 $NETWORK_ADDRESS.$i | grep "bytes from" &) ; done > /tmp/check_alive.txt
+    for i in {1..254} ;do (ping -c 1 $NETWORK_ADDRESS.$i | grep "bytes from" &) ; done > /tmp/check_alive_FTPeek.txt
     echo "Alive Machines in the Subnet"
     for i in {1..254} 
     do
-        if grep -q "$NETWORK_ADDRESS.$i" /tmp/check_alive.txt 
+        if grep -q "$NETWORK_ADDRESS.$i" /tmp/check_alive_FTPeek.txt 
         then   
             echo -ne "${BOLDWHITE}$NETWORK_ADDRESS.$i${RESET} "
         fi
@@ -64,12 +64,12 @@ then
 
     for i in {1..254} 
     do
-        if grep -q "$NETWORK_ADDRESS.$i" /tmp/check_alive.txt 
+        if grep -q "$NETWORK_ADDRESS.$i" /tmp/check_alive_FTPeek.txt 
         then   
             ./FTPeek_Single_Target.sh $NETWORK_ADDRESS.$i
         fi
     done
-    rm /tmp/check_alive.txt
+    rm /tmp/check_alive_FTPeek.txt
 
 elif [[ $TARGET =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]
 then
