@@ -145,13 +145,17 @@ function bruteforce_credentials(){
 
 # LISING ALL THE FILES AND  DIRECTORIES
 function list_files_directories(){
+
+	TARGET_NAME_LENGTH=${#TARGET}
+	TARGET_NAME_LENGTH=`expr $TARGET_NAME_LENGTH + 6`
+
 	echo "Listing the contents of the server ..."
-	wget -r ftp://$TARGET &> /dev/null --user $1 --password $2
+	wget -r ftp://$TARGET &> /dev/null --user $1 --password $2 -P /tmp
 	echo
-	tree $TARGET -a
-	find $TARGET -type f -name '.*' > /tmp/hidden_files_FTPeek.txt
-	find $TARGET -type d -name '.*' > /tmp/hidden_directories_FTPeek.txt
-	find $TARGET -type d  > /tmp/directories_FTPeek.txt
+	tree /tmp/${TARGET} -a
+	find /tmp/${TARGET} -type f -name '.*' > /tmp/hidden_files_FTPeek.txt
+	find /tmp/${TARGET} -type d -name '.*' > /tmp/hidden_directories_FTPeek.txt
+	find /tmp/${TARGET} -type d  > /tmp/directories_FTPeek.txt
 	HIDDEN_FILE_COUNT=$(cat /tmp/hidden_files_FTPeek.txt | wc -l)
 	HIDDEN_DIRECTORY_COUNT=$(cat /tmp/hidden_directories_FTPeek.txt | wc -l)
 	echo
@@ -162,18 +166,21 @@ function list_files_directories(){
 		echo
 		echo "Hidden Files"
 		echo "------------"
-		cat /tmp/hidden_files_FTPeek.txt
+		cut -c$TARGET_NAME_LENGTH- /tmp/hidden_files_FTPeek.txt > /tmp/hidden_files_FTPeek_cut.txt
+		cat /tmp/hidden_files_FTPeek_cut.txt
 		echo
+
 	fi
 	if [ $HIDDEN_DIRECTORY_COUNT -gt 0 ]
 	then
 		echo "Hidden Directories"
 		echo "------------------"
-		cat /tmp/hidden_directories_FTPeek.txt
+		cut -c$TARGET_NAME_LENGTH- /tmp/hidden_directories_FTPeek.txt > /tmp/hidden_directories_FTPeek_cut.txt
+		cat /tmp/hidden_directories_FTPeek_cut.txt
 		echo
 	fi
-	rm -rf $TARGET
 	rm /tmp/hidden_files_FTPeek.txt /tmp/hidden_directories_FTPeek.txt 
+	rm -rf /tmp/${TARGET}
 }
 
 # CHECK IF A FILE CAN BE UPLOADED TO THE HOST 
@@ -182,7 +189,7 @@ function check_upload_permissions(){
 	touch /tmp/check_upload_FTPeek.txt
 
 	TARGET_NAME_LENGTH=${#TARGET}
-	TARGET_NAME_LENGTH=`expr $TARGET_NAME_LENGTH + 1`
+	TARGET_NAME_LENGTH=`expr $TARGET_NAME_LENGTH + 6`
 
 	cut -c$TARGET_NAME_LENGTH- /tmp/directories_FTPeek.txt > /tmp/directories_cut_FTPeek.txt
 	sed -i '/^$/d'  /tmp/directories_cut_FTPeek.txt
@@ -191,7 +198,7 @@ function check_upload_permissions(){
 		bash -c "ftp -nv $TARGET <<END
 		user $1 $2
 		cd $directory
-		put /tmp/check_upload_FTPeek.txt $RANDOM_FTPeek.txt
+		put /tmp/check_upload_FTPeek.txt $RANDOM.txt
 		exit
 		END" &> /tmp/check_upload_permissions_FTPeek.txt
 
