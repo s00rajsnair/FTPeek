@@ -15,8 +15,8 @@ This tool can scan a single machine's FTP service, as well as sweep an entire ne
 
 ### Usage
 
-For this tool to work, you need to install the latest version of `nmap` and `wget` on your machine.
-Give `sudo apt install nmap wget`
+For this tool to work properly, you need to install the latest version of `nmap`, `wget` and `tree` on your machine.
+Give `sudo apt install nmap wget tree`
 
 Now enter the following commands on the terminal : 
 
