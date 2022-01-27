@@ -15,8 +15,8 @@ This tool can scan a single machine's FTP service, as well as sweep an entire ne
 
 ### Usage
 
-For this tool to work, you need to install the latest version of `nmap` and `wget` on your machine.
-Give `sudo apt install nmap wget`
+For this tool to work properly, you need to install the latest version of `nmap`, `wget` and `tree` on your machine.\
+Give `sudo apt install nmap wget tree`
 
 Now enter the following commands on the terminal : 
 
@@ -25,8 +25,8 @@ git clone https://github.com/s00rajsnair/FTPeek
 cd FTPeek
 ```
 
-Now, enter `./FTPeek.sh <Target IP Address>`  OR  `./FTPeek.sh <Subnet Address>`\
+Now, enter `./FTPeek.sh <Target IP Address>`  OR  `./FTPeek.sh <Subnet Address>`
 
 Examples : \
-`./FTPeek.sh 192.168.1.8` will scan only the machine 192.168.1.8\
+`./FTPeek.sh 192.168.1.8` will scan only the machine 192.168.1.8 \
 While `./FTPeek.sh 192.168.1.0` will scan all machines in the 192.168.1.0/24 network i.e, from 192.168.1.1 to 192.168.1.254
