@@ -28,5 +28,5 @@ cd FTPeek
 Now, enter `./FTPeek.sh <Target IP Address>`  OR  `./FTPeek.sh <Subnet Address>`\
 
 Examples : \
-`./FTPeek.sh 192.168.1.8` will scan only the machine 192.168.1.8\
+`./FTPeek.sh 192.168.1.8` will scan only the machine 192.168.1.8 
 While `./FTPeek.sh 192.168.1.0` will scan all machines in the 192.168.1.0/24 network i.e, from 192.168.1.1 to 192.168.1.254
