@@ -226,7 +226,7 @@ then
 	knock_port
 	if $PORT_OPEN 
 	then
-		echo -e "$GREEN_BUTTON The FTP port $FTP_PORT is OPEN on $TARGET"
+		echo -e "$GREEN_BUTTON The FTP port $FTP_PORT is OPEN"
 		get_banner
 		check_anonymous
 		if $ANONYMOUS_LOGIN_ENABLED
@@ -266,7 +266,7 @@ then
 			fi
 		fi
 	else
-		echo -e "$RED_BUTTON The FTP port $FTP_PORT is CLOSED on $TARGET"
+		echo -e "$RED_BUTTON The FTP port $FTP_PORT is CLOSED"
 	fi
 else
 	echo -e "$RED_BUTTON $TARGET is DOWN"
