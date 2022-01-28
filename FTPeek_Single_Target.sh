@@ -56,14 +56,14 @@ function check_host(){
 }
 
 # CHECK IF THE FTP PORT $FTP_PORT IS OPEN 
-function  knock_port(){
-	echo -e "Knocking the FTP port ..."
-	nmap $TARGET -p $FTP_PORT -Pn &> /tmp/knock_port_FTPeek.txt
-	if grep -q "$FTP_PORT/tcp open  ftp" /tmp/knock_port_FTPeek.txt;
+function  scan_port(){
+	echo -e "Scanning the FTP port ..."
+	nmap $TARGET -p $FTP_PORT -Pn &> /tmp/scan_port_FTPeek.txt
+	if grep -q "$FTP_PORT/tcp open  ftp" /tmp/scan_port_FTPeek.txt;
 	then
 		PORT_OPEN=true
 	fi 
-		rm /tmp/knock_port_FTPeek.txt
+		rm /tmp/scan_port_FTPeek.txt
 }
 
 # RETREIVING THE BANNER 
@@ -223,7 +223,7 @@ check_host
 if $HOST_UP
 then
 	echo -e "$GREEN_BUTTON $TARGET is UP"
-	knock_port
+	scan_port
 	if $PORT_OPEN 
 	then
 		echo -e "$GREEN_BUTTON The FTP port $FTP_PORT is OPEN"
