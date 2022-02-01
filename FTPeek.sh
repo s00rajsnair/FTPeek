@@ -40,7 +40,7 @@ echo -e
 
 if [ -z $TARGET  ] || [ $TARGET == "-h" ] || [ $TARGET == "--help" ] || [ $TARGET == "-help" ]
 then
-	echo "Please enter an IP OR Network Address of the default class C Subnet"
+	echo "Please enter an IP OR /24 Network Address"
     echo "Please do not enter any hostname"
 	echo "Usage: ./FTPeek.sh IP OR Network Address"
 	echo "Examples:  "
