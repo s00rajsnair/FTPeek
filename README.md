@@ -2,7 +2,7 @@
 This tool can be used for enumerating common vulnerabilities and misconfigurations on FTP servers.
 
 Key features : 
-  1. Knocking the FTP Port
+  1. Scanning the FTP Port
   2. Grabbing the FTP Banner
   3. Checking for Anonymous Authentication
   4. Bruteforcing Common Credentials
